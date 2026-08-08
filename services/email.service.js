@@ -63,19 +63,20 @@ class EmailService {
       );
     }
 
-    const port = Number(process.env.SMTP_PORT) || 465;
-
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: port,
-      secure: port === 465, // true for 465, false for 587/other ports
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: false, // true for 465, false for 587
       auth: {
         user: user,
         pass: pass,
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
+      // Without these, a stalled/blocked outbound SMTP connection (common on
+      // some PaaS free tiers) hangs indefinitely and blocks the whole HTTP
+      // request — fail fast instead so callers can handle it gracefully.
+      connectionTimeout: 10000, // time to establish the TCP connection
+      greetingTimeout: 10000, // time to wait for the SMTP greeting
+      socketTimeout: 15000, // time allowed for the whole exchange
     });
   }
 
